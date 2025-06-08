@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日本語ルビ振り君 (超強化・機能追加版)</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --accent-color: #007bff;
+            --accent-hover-color: #0056b3;
+            --accent-disabled-color: #00b2ff;
+            --border-color: #dee2e6;
+            --output-bg-color: #ffffff;
+            --output-text-color: #343a40;
+            --ruby-color: #495057;
+            --card-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            --button-bg: var(--accent-color);
+            --button-text: #ffffff;
+            --button-secondary-bg: #6c757d;
+            --button-secondary-hover-bg: #5a6268;
+            --button-danger-bg: #dc3545;
+            --button-danger-hover-bg: #c82333;
+            --highlight-bg: rgba(0, 123, 255, 0.1);
+            --speaking-paragraph-bg: rgba(255, 224, 178, 0.3); /* More subtle paragraph highlight */
+            --speaking-sentence-bg: #ffe0b2; /* Orange tint for speaking sentence */
+            --speaking-text-color: #000; /* Text color for speaking highlights */
+            --slider-thumb-bg: var(--accent-color);
+            --slider-track-bg: #ccc;
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --accent-color: #00aaff;
+            --accent-hover-color: #0077cc;
+            --accent-disabled-color: #0077cc;
+            --border-color: #444444;
+            --output-bg-color: #1e1e1e;
+            --output-text-color: #f0f0f0;
+            --ruby-color: #bbbbbb;
+            --card-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            --button-secondary-bg: #555c63;
+            --button-secondary-hover-bg: #43484e;
+            --button-danger-bg: #a71d2a;
+            --button-danger-hover-bg: #841721;
+            --highlight-bg: rgba(0, 170, 255, 0.15);
+            --speaking-paragraph-bg: rgba(90, 62, 30, 0.4);
+            --speaking-sentence-bg: #5a3e1e;
+            --speaking-text-color: #f0f0f0;
+            --slider-thumb-bg: var(--accent-color);
+            --slider-track-bg: #555;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', Meiryo, Osaka, 'MS PGothic', 'MS PGothic', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 20px auto; /* Added top/bottom margin */
+            padding: 30px;
+            background-color: var(--output-bg-color);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: background-color 0.3s;
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        h1 { font-size: 2.4em; letter-spacing: 0.5px;} /* Slightly adjusted */
+        h2 { font-size: 1.7em; margin-top: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;}
+        h3 { font-size: 1.3em; text-align: left; margin-top: 25px; margin-bottom: 15px;}
+
+        textarea {
+            width: calc(100% - 28px);
+            min-height: 180px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1.05em;
+            margin-bottom: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+        .dark-mode textarea:focus { box-shadow: 0 0 0 3px rgba(0,170,255,0.3); }
+
+        .main-controls, .sub-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+
+        .control-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .control-group label { font-size: 0.95em; margin-right: 5px; }
+        .control-group input[type="range"] { width: 100px; cursor: pointer; accent-color: var(--accent-color);}
+
+
+        button, select {
+            padding: 10px 18px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: center;
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+        }
+        select {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            min-width: 180px;
+        }
+
+        button:hover, select:hover {
+            background-color: var(--accent-hover-color);
+            color: var(--button-text);
+        }
+        select:hover { border-color: var(--accent-hover-color); background-color: var(--bg-color); }
+        button:active { transform: scale(0.97); }
+
+        button:disabled, select:disabled {
+            background-color: #cccccc; border-color: #cccccc; color: #666666;
+            cursor: not-allowed; opacity: 0.7; transform: scale(1);
+        }
+        .dark-mode button:disabled, .dark-mode select:disabled {
+            background-color: #4a4a4a; border-color: #4a4a4a; color: #888888;
+        }
+
+        button.secondary { background-color: var(--button-secondary-bg); }
+        button.secondary:hover { background-color: var(--button-secondary-hover-bg); }
+        button.danger { background-color: var(--button-danger-bg); }
+        button.danger:hover { background-color: var(--button-danger-hover-bg); }
+
+        .icon-button { font-size: 1.3em; padding: 8px 12px; min-width: auto; }
+        .theme-toggle-button { margin-left: auto; }
+
+        .output-container {
+            margin-top: 30px; padding: 25px; border: 1px solid var(--border-color);
+            border-radius: 8px; background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        
+        .ruby-text p {
+            margin-bottom: 1.8em; font-size: 1.2em; line-height: 3;
+            color: var(--output-text-color); padding: 8px; border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.2s;
+            -webkit-line-break: anywhere; line-break: anywhere; word-break: break-all;
+        }
+        .ruby-text p.speaking-paragraph {
+            background-color: var(--speaking-paragraph-bg); /* Subtle highlight for whole paragraph */
+            /* box-shadow: 0 0 8px var(--speaking-paragraph-bg); */
+        }
+        .ruby-text span.sentence {
+            transition: background-color 0.2s, color 0.2s;
+            border-radius: 3px; /* For sentence highlight visibility */
+            padding: 0.05em 0.1em; /* Slight padding for sentence highlight */
+            margin: -0.05em -0.1em; /* Counteract padding to maintain flow */
+        }
+        .ruby-text span.sentence.speaking-sentence {
+            background-color: var(--speaking-sentence-bg);
+            color: var(--speaking-text-color);
+            /* box-shadow: 0 0 5px var(--speaking-sentence-bg); */
+        }
+        .ruby-text span.sentence.speaking-sentence ruby rt { /* Ensure ruby text is also visible */
+             color: var(--speaking-text-color) !important; /* Important to override default rt color */
+             opacity: 0.85;
+        }
+
+
+        ruby {
+            ruby-position: over; cursor: help; transition: background-color 0.2s;
+            padding: 0.1em 0.05em; border-radius: 3px;
+        }
+        ruby:hover { background-color: var(--highlight-bg); }
+        rt {
+            font-size: 0.55em; color: var(--ruby-color); opacity: 0.95;
+            font-weight: normal; user-select: none; transition: color 0.3s, opacity 0.3s;
+        }
+        
+        .tts-controls, .extra-features, .audio-export-info {
+            margin-top: 20px; padding: 20px; border: 1px solid var(--border-color);
+            border-radius: 8px; background-color: var(--output-bg-color);
+        }
+        .tts-controls .control-group, .extra-features .control-group { margin-bottom: 15px; }
+        .tts-controls .control-group:last-child, .extra-features .control-group:last-child { margin-bottom: 0; }
+
+        .slider-container { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .slider-container label { min-width: 50px; font-size:0.9em; }
+        .slider-container input[type="range"] { 
+            flex-grow: 1; height: 8px; -webkit-appearance: none; appearance: none; 
+            background: var(--slider-track-bg); border-radius: 5px; outline: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; appearance: none; width: 18px; height: 18px; 
+            background: var(--slider-thumb-bg); border-radius: 50%; cursor: pointer; 
+            box-shadow: 0 0 2px rgba(0,0,0,0.2); 
+        }
+        .slider-container input[type="range"]::-moz-range-thumb { 
+            width: 18px; height: 18px; background: var(--slider-thumb-bg); 
+            border-radius: 50%; cursor: pointer; border:none; box-shadow: 0 0 2px rgba(0,0,0,0.2);
+        }
+        .slider-container span { min-width: 30px; text-align: right; font-size: 0.9em; color: var(--text-color);}
+
+        .status-bar {
+            font-size: 0.85em; color: var(--text-color); opacity: 0.7;
+            margin-top: 0px; margin-bottom: 15px; text-align: right; min-height: 20px; 
+        }
+
+        footer { text-align: center; margin-top: 40px; padding-bottom: 20px; font-size: 0.9em; color: #888; }
+        .dark-mode footer { color: #bbb; }
+
+        @media print {
+            body { padding: 0; font-size: 12pt; color: #000 !important; background-color: #fff !important; }
+            .container, .output-container, .ruby-text p, .ruby-text span.sentence {
+                background-color: #fff !important;
+                color: #000 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .main-controls, .sub-controls, .tts-controls, .extra-features, .audio-export-info, .theme-toggle-button, footer, h1, h3,
+            textarea, .status-bar, #loadSampleButton, #sampleTextSelector, #clearButton, .font-controls, #toggleRubyButton,
+            .tts-actions button, .tts-settings, .extra-features button, #resetSettingsButton, #printOutputButton {
+                display: none !important;
+            }
+            h2 { text-align: left; border-bottom: 1px solid #ccc; font-size: 1.5em; }
+            .output-container { padding: 0; margin: 0; }
+            .ruby-text p { margin-bottom: 1em; line-height: 2.5; font-size: 1em !important; } /* Ensure font size is not from JS variable for print */
+            rt { font-size: 0.6em !important; color: #333 !important; }
+            .hide-ruby-rt rt { display: none !important; } /* Respect ruby visibility for print */
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px;}
+            .container { padding: 20px;}
+            .main-controls, .sub-controls { flex-direction: column; align-items: stretch;}
+            .control-group { justify-content: space-between; }
+            .control-group label { margin-right: 10px;}
+            .theme-toggle-button { margin-left: 0; width: 100%; margin-top:10px;}
+            
+            .tts-controls .control-group, .extra-features .control-group { flex-direction: column; align-items: stretch;}
+            .tts-controls .control-group button, .extra-features .control-group button,
+            .tts-controls .control-group select, .extra-features .control-group select,
+            .sub-controls button { width: 100%; margin-bottom: 8px; }
+            .tts-controls .control-group button:last-child, .extra-features .control-group button:last-child,
+            .sub-controls button:last-child { margin-bottom: 0;}
+            
+            .slider-container { flex-direction: column; align-items: stretch;}
+            .slider-container label { margin-bottom: 5px; text-align: left; }
+            .slider-container span { text-align: left; margin-top: 5px;}
+            .slider-container input[type="range"] { width: auto; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; font-size:15px; }
+            .container { padding: 15px; }
+            h1 { font-size: 2em; }
+            textarea { min-height: 150px;}
+            .ruby-text p { font-size: 1.1em; line-height: 2.8;}
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>日本語ルビ振り君 <span style="font-size: 0.6em; color: var(--accent-disabled-color);">(超強化・機能追加版)</span></h1>
+        <p>下のテキストエリアに文章を入力または貼り付け、「漢字（かんじ）」の形式でルビを指定してください。</p>
+        
+        <textarea id="inputText" rows="12" placeholder="例: 此処（ここ）に日本語（にほんご）の文章（ぶんしょう）を入力（にゅうりょく）してください。" aria-label="日本語入力エリア"></textarea>
+        <div id="statusBar" class="status-bar" aria-live="polite"></div>
+
+        <div class="main-controls">
+            <div class="control-group">
+                <button id="loadSampleButton" title="例文を読み込む">例文</button>
+                <select id="sampleTextSelector" aria-label="例文を選択"></select>
+                <button id="clearButton" class="secondary" title="入力内容を消去">クリア</button>
+            </div>
+            <div class="control-group font-controls">
+                <button id="decreaseFontButton" class="icon-button" title="文字を小さく" aria-label="文字を小さく">ー</button>
+                <button id="increaseFontButton" class="icon-button" title="文字を大きく" aria-label="文字を大きく">＋</button>
+            </div>
+            <div class="control-group">
+                <button id="toggleRubyButton" title="ルビ表示切替">ルビ OFF</button>
+            </div>
+             <div class="control-group">
+                <button id="themeToggleButton" class="icon-button theme-toggle-button" title="テーマ切替" aria-label="テーマを切り替える">🌙</button>
+            </div>
+        </div>
+        
+        <div class="sub-controls">
+             <div class="control-group">
+                <button id="resetSettingsButton" class="secondary" title="全ての設定を初期化"><span role="img" aria-label="リセット">🔄</span> 設定リセット</button>
+                <button id="printOutputButton" class="secondary" title="表示結果を印刷"><span role="img" aria-label="印刷">🖨️</span> 結果を印刷</button>
+            </div>
+        </div>
+
+
+        <div class="tts-controls">
+            <h3><span role="img" aria-label="スピーカーアイコン">🔊</span> 音声朗読</h3>
+            <div class="control-group">
+                <label for="voiceSelect">声の選択:</label>
+                <select id="voiceSelect" aria-label="声を選択"></select>
+            </div>
+            <div class="control-group tts-actions">
+                <button id="playButton" title="再生"><span role="img" aria-label="再生">▶️</span> 再生</button>
+                <button id="pauseButton" title="一時停止" disabled><span role="img" aria-label="一時停止">⏸️</span> 一時停止</button>
+                <button id="resumeButton" title="再生再開" disabled><span role="img" aria-label="再開">⏯️</span> 再開</button>
+                <button id="stopButton" class="danger" title="停止" disabled><span role="img" aria-label="停止">⏹️</span> 停止</button>
+            </div>
+            <div class="control-group tts-settings">
+                 <div class="slider-container">
+                    <label for="rateSlider">速さ:</label>
+                    <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1" aria-label="読み上げ速度">
+                    <span id="rateValue" aria-hidden="true">1.0</span>
+                </div>
+                <div class="slider-container">
+                    <label for="pitchSlider">高さ:</label>
+                    <input type="range" id="pitchSlider" min="0" max="2" step="0.1" value="1" aria-label="読み上げの高さ">
+                    <span id="pitchValue" aria-hidden="true">1.0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="audio-export-info">
+            <h3><span role="img" aria-label="情報アイコン">ℹ️</span> 音声のエクスポートについて</h3>
+            <p style="font-size:0.9em;">
+                現在、ウェブブラウザの標準機能（Web Speech API）では、合成された音声を直接ファイルとしてダウンロードする機能は提供されていません。
+                これは、音声合成がブラウザやオペレーティングシステムの機能に依存して行われるため、ウェブページ側で音声データそのものにアクセスすることが制限されているためです。
+            </p>
+            <p style="font-size:0.9em;">
+                朗読された音声を保存したい場合は、お手数ですが、お使いのコンピュータに搭載されている音声録音ソフトウェアをご利用ください。
+            </p>
+            <ul style="font-size:0.85em;">
+                <li><strong>Windows:</strong> 「ボイスレコーダー」アプリなど</li>
+                <li><strong>macOS:</strong> 「QuickTime Player」のオーディオ収録機能、「ボイスメモ」アプリなど</li>
+                <li><strong>Linux:</strong> 「Audacity」や各種ディストリビューション標準のサウンドレコーダーなど</li>
+            </ul>
+            <p style="font-size:0.9em;">これらのツールでコンピュータ内部の音（ステレオミキサーやループバック出力）を録音することで、音声をファイルとして保存できます（設定が必要な場合があります）。</p>
+        </div>
+
+        <div class="extra-features">
+            <h3><span role="img" aria-label="工具アイコン">🛠️</span> 便利機能</h3>
+            <div class="control-group">
+                <button id="copyHtmlButton" title="ルビ付きHTMLをコピー"><span role="img" aria-label="コピーアイコン">📋</span> HTMLコピー</button>
+                <button id="copyTextButton" title="表示テキストをコピー（ルビは括弧付き）"><span role="img" aria-label="コピーアイコン">📄</span> テキストコピー</button>
+                <button id="copyCleanTextButton" title="ルビなし元テキストをコピー (読み上げ用)"><span role="img" aria-label="コピーアイコン">🧹</span> 元テキストコピー</button>
+            </div>
+        </div>
+
+        <div class="output-container">
+            <h2><span role="img" aria-label="書類アイコン">📄</span> 表示結果</h2>
+            <div id="outputArea" class="ruby-text" aria-live="polite">
+                <p style="color: #888;">ここに結果が表示されます...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; <span id="currentYear"></span> 日本語ルビ振り君 (超強化・機能追加版)</p>
+    </footer>
+
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        const inputText = document.getElementById('inputText');
+        const outputArea = document.getElementById('outputArea');
+        const loadSampleButton = document.getElementById('loadSampleButton');
+        const sampleTextSelector = document.getElementById('sampleTextSelector');
+        const clearButton = document.getElementById('clearButton');
+        const increaseFontButton = document.getElementById('increaseFontButton');
+        const decreaseFontButton = document.getElementById('decreaseFontButton');
+        const themeToggleButton = document.getElementById('themeToggleButton');
+        const toggleRubyButton = document.getElementById('toggleRubyButton');
+        const statusBar = document.getElementById('statusBar');
+        const resetSettingsButton = document.getElementById('resetSettingsButton');
+        const printOutputButton = document.getElementById('printOutputButton');
+
+
+        const voiceSelect = document.getElementById('voiceSelect');
+        const playButton = document.getElementById('playButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resumeButton = document.getElementById('resumeButton');
+        const stopButton = document.getElementById('stopButton');
+        const rateSlider = document.getElementById('rateSlider');
+        const rateValue = document.getElementById('rateValue');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const pitchValue = document.getElementById('pitchValue');
+
+        const copyHtmlButton = document.getElementById('copyHtmlButton');
+        const copyTextButton = document.getElementById('copyTextButton');
+        const copyCleanTextButton = document.getElementById('copyCleanTextButton');
+
+        let currentFontSize = 1.2; // em
+        const FONT_STEP = 0.1;
+        const DEFAULT_FONT_SIZE = 1.2;
+        let japaneseVoices = [];
+        let synthesis = window.speechSynthesis;
+        let utteranceQueue = [];
+        let currentUtteranceIndex = 0;
+        let currentParagraphElements = []; 
+        let isPaused = false;
+        let isRubyVisible = true;
+        const DEFAULT_RUBY_VISIBLE = true;
+
+        // Sentence delimiter regex: captures sequences ending with standard terminators or newlines.
+        // It tries to keep the delimiter with the sentence.
+        const SENTENCE_DELIMITER_REGEX = /[^。！？\n]+[。！？\n]?|\n+/g;
+
+
+        const sampleTexts = [
+            { name: "標準的な例文", text: `それ光陰（こういん）たるや、蛍（ほたる）の微光（びこう）の如（ごと）く、白駒（はっく）の隙（げき）を過（す）ぐるが如（ごと）し。その襞（ひだ）の間（あいだ）には、万千（ばんせん）の幽韵（ゆういん）を蔵（ぞう）し、詩（し）の如（ごと）く画（え）の如（ごと）く、人（ひと）の遐思（かし）を誘（さそ）う。\n晨熹（しんき）初（はじ）めて露（あら）われ、金烏（きんう）雲（くも）を破（やぶ）る。光（ひかり）は綺窓（きそう）を透（とお）し、室（しつ）を映（うつ）して輝（かがや）きを生（しょう）じ、繊塵（せんじん）翩跹（へんせん）として、仙娥（せんが）の舞（ま）い起（た）つが若（ごと）し。`},
+            { name: "短い挨拶", text: `今日（きょう）は天気（てんき）がいいですね。明日（あした）も晴（は）れるといいな。`},
+            { name: "複雑な単語", text: `憂鬱（ゆううつ）な気分（きぶん）を払拭（ふっしょく）するために、珈琲（コーヒー）を飲（の）んだ。薔薇（ばら）が綺麗（きれい）だ。`},
+            { name: "ひらがなカタカナ混じり", text: `これは平仮名（ひらがな）と片仮名（カタカナ）のテストです。檸檬（レモン）は酸（す）っぱい。`},
+            { name: "英語とルビ", text: `これはTest（テスト）です。Apple（アップル）社。` },
+            { name: "括弧の誤用例", text: `この文には（正しい）ルビと、（ただの括弧）と、漢字（かんじ）じゃないもの（ひらがな）にルビを振ろうとする試みがあります。ABC（エービーシー）。（かっこ）だけ。` }
+        ];
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+        
+        function parseRubyText(text) {
+            let result = '';
+            let remainingText = text;
+            const rubyPattern = /((?:[一-龯々〆ヵヶ]+)|(?:[a-zA-Z0-9]+))（([ぁ-んァ-ヶー]+?)）/g;
+            let lastIndex = 0;
+            let match;
+
+            while ((match = rubyPattern.exec(remainingText)) !== null) {
+                result += escapeHtml(remainingText.substring(lastIndex, match.index));
+                const base = match[1];
+                const ruby = match[2];
+                const isKanjiBase = /[一-龯々〆ヵヶ]/.test(base);
+                const isAlphaNumBase = /^[a-zA-Z0-9]+$/.test(base);
+                const isValidFurigana = /^[ぁ-んァ-ヶー]+$/.test(ruby);
+
+                if ((isKanjiBase || isAlphaNumBase) && isValidFurigana) {
+                    result += `<ruby>${escapeHtml(base)}<rt>${escapeHtml(ruby)}</rt></ruby>`;
+                } else {
+                    result += escapeHtml(match[0]);
+                }
+                lastIndex = rubyPattern.lastIndex;
+            }
+            result += escapeHtml(remainingText.substring(lastIndex));
+            return result;
+        }
+
+        function renderText(text) {
+            const paragraphsInput = text.split(/\n/); 
+            let paragraphCount = 0;
+            
+            outputArea.innerHTML = paragraphsInput.map((pContent, pIndex) => {
+                const trimmedPContent = pContent.trim();
+                const pElement = document.createElement('p');
+                pElement.style.fontSize = `${currentFontSize}em`;
+                pElement.dataset.paragraphId = pIndex; 
+
+                if (trimmedPContent === '') {
+                    pElement.innerHTML = '<br>';
+                    pElement.style.minHeight = '1em';
+                } else {
+                    paragraphCount++;
+                    const sentenceStrings = trimmedPContent.match(SENTENCE_DELIMITER_REGEX) || [trimmedPContent];
+                    let sentencesHTML = "";
+                    sentenceStrings.forEach((sentenceStr, sIndex) => {
+                        if (sentenceStr.trim() !== '') {
+                            const sentenceRubyHTML = parseRubyText(sentenceStr); 
+                            sentencesHTML += `<span class="sentence" data-sentence-id="${pIndex}-${sIndex}">${sentenceRubyHTML}</span>`;
+                        }
+                    });
+                    pElement.innerHTML = sentencesHTML;
+                }
+                return pElement.outerHTML;
+            }).join('');
+
+            if (text.trim() === '') {
+                outputArea.innerHTML = `<p style="color: #888; font-size: ${currentFontSize}em;">ここに結果が表示されます...</p>`;
+            }
+            
+            updateCharacterCount(text);
+
+            if (synthesis.speaking || synthesis.pending || synthesis.paused) {
+                stopSpeech(true); 
+            }
+        }
+        
+        function updateCharacterCount(text) {
+            const charCount = text.length;
+            const kanjiCount = (text.match(/[一-龯々〆ヵヶ]/g) || []).length;
+            const sentences = text.match(SENTENCE_DELIMITER_REGEX);
+            const sentenceCount = sentences ? sentences.filter(s => s.trim() !== '').length : 0;
+            statusBar.textContent = `文字数: ${charCount} | 漢字数: ${kanjiCount} | 文数: ${sentenceCount}`;
+        }
+
+        function getCleanTextForSpeech(element) {
+            let text = '';
+            const childNodes = element.childNodes;
+
+            for (let i = 0; i < childNodes.length; i++) {
+                const node = childNodes[i];
+                if (node.nodeType === Node.TEXT_NODE) {
+                    text += node.textContent;
+                } else if (node.nodeName === 'RUBY') {
+                    if (node.childNodes.length > 0 && node.childNodes[0].nodeType === Node.TEXT_NODE) {
+                        text += node.childNodes[0].textContent;
+                    } else if (node.childNodes.length > 0 && node.childNodes[0].childNodes.length > 0 && node.childNodes[0].childNodes[0].nodeType === Node.TEXT_NODE){
+                        text += node.childNodes[0].childNodes[0].textContent;
+                    }
+                } else if (node.nodeName === 'BR') {
+                     text += '\n'; 
+                } else if (node.childNodes && node.childNodes.length > 0) {
+                    if (node.classList && node.classList.contains('sentence')) { // If it's a sentence span, recurse
+                         text += getCleanTextForSpeech(node);
+                    } else if (node.nodeName !== "RT") { // Avoid RT content generally, unless it's part of a sentence structure
+                         text += getCleanTextForSpeech(node); 
+                    }
+                }
+            }
+            // For character index mapping, it's crucial that the text generated here for the utterance
+            // closely matches how the `onboundary` event's charIndex will be calculated.
+            // Usually, multiple spaces are collapsed to one by the speech engine.
+            return text.replace(/\s+/g, ' ').trim(); 
+        }
+
+        function populateVoiceList() {
+            if (typeof speechSynthesis === 'undefined') {
+                playButton.disabled = true; voiceSelect.disabled = true;
+                const option = document.createElement('option'); option.textContent = '音声合成はサポートされていません';
+                voiceSelect.appendChild(option); console.warn("Speech Synthesis not supported.");
+                [rateSlider, pitchSlider, pauseButton, resumeButton, stopButton].forEach(el => el.disabled = true); return;
+            }
+            const loadVoices = () => {
+                japaneseVoices = synthesis.getVoices().filter(voice => voice.lang.startsWith('ja'));
+                voiceSelect.innerHTML = ''; 
+                if (japaneseVoices.length === 0) {
+                    const option = document.createElement('option'); option.textContent = '利用可能な日本語の音声がありません';
+                    voiceSelect.appendChild(option); playButton.disabled = true; return;
+                }
+                playButton.disabled = false; let persistedVoiceName = localStorage.getItem('preferredVoice'); let voiceFound = false;
+                japaneseVoices.forEach(voice => {
+                    const option = document.createElement('option'); option.textContent = `${voice.name} (${voice.lang})`;
+                    option.setAttribute('data-lang', voice.lang); option.setAttribute('data-name', voice.name);
+                    if (voice.name === persistedVoiceName) { option.selected = true; voiceFound = true; }
+                    voiceSelect.appendChild(option);
+                });
+                if (!voiceFound && japaneseVoices.length > 0) { 
+                     voiceSelect.options[0].selected = true;
+                     localStorage.setItem('preferredVoice', voiceSelect.options[0].getAttribute('data-name'));
+                }
+            };
+            synthesis.onvoiceschanged = loadVoices;
+            if (synthesis.getVoices().length > 0) loadVoices();
+        }
+        
+        voiceSelect.addEventListener('change', () => {
+            localStorage.setItem('preferredVoice', voiceSelect.selectedOptions[0]?.getAttribute('data-name'));
+        });
+
+        function playNextUtterance() {
+            if (currentUtteranceIndex < utteranceQueue.length && !isPaused) {
+                const {utterance, paragraphElement, sentenceData} = utteranceQueue[currentUtteranceIndex];
+                
+                document.querySelectorAll('.ruby-text span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+                currentParagraphElements.forEach(p => p.classList.remove('speaking-paragraph'));
+                if (paragraphElement) paragraphElement.classList.add('speaking-paragraph');
+
+                utterance.onboundary = (event) => {
+                    if (paragraphElement) {
+                        paragraphElement.querySelectorAll('span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+                    }
+                    
+                    const charIndex = event.charIndex;
+                    for (const sentence of sentenceData) {
+                        if (charIndex >= sentence.rangeStart && charIndex < sentence.rangeEnd) {
+                            sentence.element.classList.add('speaking-sentence');
+                            sentence.element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                            break; 
+                        }
+                    }
+                };
+
+                utterance.onend = () => {
+                    if (paragraphElement) {
+                        paragraphElement.classList.remove('speaking-paragraph');
+                        paragraphElement.querySelectorAll('span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+                    }
+                    currentUtteranceIndex++;
+                    if (!isPaused) { 
+                        playNextUtterance();
+                    }
+                };
+                
+                utterance.onerror = (event) => {
+                    console.error('SpeechSynthesisUtterance error:', event);
+                    if (paragraphElement) {
+                         paragraphElement.classList.remove('speaking-paragraph');
+                         paragraphElement.querySelectorAll('span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+                    }
+                    updateTTSButtons(false, false); 
+                    alert(`音声再生エラー: ${event.error || '不明なエラー'}`);
+                };
+
+                synthesis.speak(utterance);
+            } else {
+                if (currentUtteranceIndex >= utteranceQueue.length) { 
+                    console.log("All utterances finished.");
+                }
+                document.querySelectorAll('.ruby-text p.speaking-paragraph').forEach(p => p.classList.remove('speaking-paragraph'));
+                document.querySelectorAll('.ruby-text span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+                updateTTSButtons(false, false); 
+                isPaused = false; 
+            }
+        }
+
+        function startSpeech() {
+            if (synthesis.speaking) synthesis.cancel();
+            
+            isPaused = false;
+            currentParagraphElements = Array.from(outputArea.querySelectorAll('p[data-paragraph-id]')); 
+            utteranceQueue = [];
+            currentUtteranceIndex = 0;
+
+            const selectedVoiceName = voiceSelect.selectedOptions[0]?.getAttribute('data-name');
+            const voice = japaneseVoices.find(v => v.name === selectedVoiceName);
+
+            if (!voice) { alert('有効な日本語の音声を選択してください。'); updateTTSButtons(false, false); return; }
+
+            currentParagraphElements.forEach(pElem => {
+                const cleanParagraphText = getCleanTextForSpeech(pElem);
+                if (!cleanParagraphText) return; 
+
+                const utterance = new SpeechSynthesisUtterance(cleanParagraphText);
+                utterance.voice = voice; utterance.lang = voice.lang;
+                utterance.rate = parseFloat(rateSlider.value); utterance.pitch = parseFloat(pitchSlider.value);
+                
+                const sentenceSpans = Array.from(pElem.querySelectorAll('span.sentence'));
+                let charOffset = 0;
+                const sentenceDataForTTS = sentenceSpans.map(span => {
+                    const cleanSentenceText = getCleanTextForSpeech(span);
+                    const start = charOffset;
+                    charOffset += cleanSentenceText.length;
+                    // Check if a space should be added to the offset if sentences were implicitly joined by one.
+                    if (charOffset < cleanParagraphText.length && cleanParagraphText.charAt(charOffset) === ' ' && !cleanSentenceText.endsWith(' ')) {
+                         charOffset++; 
+                    }
+                    return { element: span, text: cleanSentenceText, rangeStart: start, rangeEnd: charOffset };
+                });
+                utteranceQueue.push({utterance: utterance, paragraphElement: pElem, sentenceData: sentenceDataForTTS});
+            });
+
+            if (utteranceQueue.length > 0) {
+                updateTTSButtons(true, false);
+                playNextUtterance();
+            } else {
+                alert('朗読する内容がありません。');
+                updateTTSButtons(false, false);
+            }
+        }
+
+        function pauseSpeech() {
+            if (synthesis.speaking && !synthesis.paused) {
+                synthesis.pause(); isPaused = true; updateTTSButtons(true, true);
+            }
+        }
+
+        function resumeSpeech() {
+            if (synthesis.paused) {
+                synthesis.resume(); isPaused = false; updateTTSButtons(true, false);
+            }
+        }
+        
+        function stopSpeech(quiet = false) {
+            if (synthesis.speaking || synthesis.pending || synthesis.paused) synthesis.cancel();
+            document.querySelectorAll('.ruby-text p.speaking-paragraph').forEach(p => p.classList.remove('speaking-paragraph'));
+            document.querySelectorAll('.ruby-text span.sentence.speaking-sentence').forEach(s => s.classList.remove('speaking-sentence'));
+            utteranceQueue = []; currentUtteranceIndex = 0; isPaused = false;
+            if (!quiet) updateTTSButtons(false, false);
+        }
+
+        function updateTTSButtons(speaking, pausedState) {
+            playButton.disabled = speaking && !pausedState;
+            pauseButton.disabled = !speaking || pausedState;
+            resumeButton.disabled = !speaking || !pausedState;
+            stopButton.disabled = !speaking && !pausedState; 
+            rateSlider.disabled = speaking; pitchSlider.disabled = speaking; voiceSelect.disabled = speaking;
+        }
+
+        let inputDebounceTimer;
+        inputText.addEventListener('input', () => {
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = setTimeout(() => {
+                 renderText(inputText.value);
+                 localStorage.setItem('inputText', inputText.value);
+            }, 250); 
+        });
+
+        sampleTextSelector.addEventListener('change', (e) => {
+            const selectedSample = sampleTexts.find(sample => sample.name === e.target.value);
+            if (selectedSample) {
+                inputText.value = selectedSample.text; renderText(selectedSample.text);
+                localStorage.setItem('inputText', selectedSample.text);
+            }
+        });
+        loadSampleButton.addEventListener('click', () => { 
+            const selectedSampleName = sampleTextSelector.value;
+            const selectedSample = sampleTexts.find(sample => sample.name === selectedSampleName) || sampleTexts[0];
+            if (selectedSample) {
+                inputText.value = selectedSample.text; sampleTextSelector.value = selectedSample.name; 
+                renderText(selectedSample.text); localStorage.setItem('inputText', selectedSample.text);
+            }
+        });
+        clearButton.addEventListener('click', () => {
+            inputText.value = ''; renderText(''); 
+            localStorage.removeItem('inputText'); updateCharacterCount('');
+        });
+
+        increaseFontButton.addEventListener('click', () => {
+            currentFontSize = Math.min(3, currentFontSize + FONT_STEP); 
+            document.querySelectorAll('.ruby-text p').forEach(el => el.style.fontSize = `${currentFontSize}em`);
+            localStorage.setItem('fontSize', currentFontSize.toString());
+        });
+        decreaseFontButton.addEventListener('click', () => {
+            currentFontSize = Math.max(0.5, currentFontSize - FONT_STEP); 
+            document.querySelectorAll('.ruby-text p').forEach(el => el.style.fontSize = `${currentFontSize}em`);
+            localStorage.setItem('fontSize', currentFontSize.toString());
+        });
+        
+        function applyTheme(isDark) {
+             if (isDark) {
+                document.body.classList.add('dark-mode'); themeToggleButton.textContent = '☀️';
+                themeToggleButton.setAttribute('aria-label', 'ライトテーマに切り替える');
+            } else {
+                document.body.classList.remove('dark-mode'); themeToggleButton.textContent = '🌙';
+                themeToggleButton.setAttribute('aria-label', 'ダークテーマに切り替える');
+            }
+        }
+        themeToggleButton.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-mode');
+            applyTheme(isDark); localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        toggleRubyButton.addEventListener('click', () => {
+            isRubyVisible = !isRubyVisible;
+            outputArea.classList.toggle('hide-ruby-rt', !isRubyVisible);
+            toggleRubyButton.textContent = isRubyVisible ? "ルビ OFF" : "ルビ ON";
+            toggleRubyButton.title = isRubyVisible ? "ルビを非表示にする" : "ルビを表示する";
+            localStorage.setItem('rubyVisible', isRubyVisible.toString());
+        });
+
+        playButton.addEventListener('click', startSpeech);
+        pauseButton.addEventListener('click', pauseSpeech);
+        resumeButton.addEventListener('click', resumeSpeech);
+        stopButton.addEventListener('click', stopSpeech);
+
+        rateSlider.addEventListener('input', () => {
+            rateValue.textContent = parseFloat(rateSlider.value).toFixed(1);
+            localStorage.setItem('ttsRate', rateSlider.value);
+        });
+        pitchSlider.addEventListener('input', () => {
+            pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1);
+            localStorage.setItem('ttsPitch', pitchSlider.value);
+        });
+
+        async function copyToClipboard(text, type) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert(`${type}をクリップボードにコピーしました。`);
+            } catch (err) {
+                console.error(`${type}コピー失敗:`, err);
+                alert(`${type}のコピーに失敗しました。`);
+            }
+        }
+        copyHtmlButton.addEventListener('click', () => copyToClipboard(outputArea.innerHTML, 'ルビ付きHTML'));
+        copyTextButton.addEventListener('click', () => { 
+            let textToCopy = "";
+            outputArea.querySelectorAll('p[data-paragraph-id]').forEach(pElem => {
+                if (pElem.querySelector('br') && pElem.textContent.trim() === '') { textToCopy += "\n"; return; }
+                let currentPText = "";
+                pElem.childNodes.forEach(node => { 
+                    if (node.nodeType === Node.TEXT_NODE) { currentPText += node.textContent; }
+                    else if (node.nodeName === "SPAN" && node.classList.contains("sentence")) {
+                         node.childNodes.forEach(innerNode => { 
+                            if (innerNode.nodeType === Node.TEXT_NODE) { currentPText += innerNode.textContent; }
+                            else if (innerNode.nodeName === 'RUBY') {
+                                currentPText += innerNode.childNodes[0].textContent; 
+                                if (isRubyVisible && innerNode.childNodes[1] && innerNode.childNodes[1].nodeName === 'RT') {
+                                   currentPText += `（${innerNode.childNodes[1].textContent}）`;
+                                }
+                            } else if (innerNode.nodeName === 'BR') { currentPText += "\n"; }
+                         });
+                    } else if (node.nodeName === 'RUBY') { 
+                        currentPText += node.childNodes[0].textContent; 
+                        if (isRubyVisible && node.childNodes[1] && node.childNodes[1].nodeName === 'RT') {
+                           currentPText += `（${node.childNodes[1].textContent}）`;
+                        }
+                    } else if (node.nodeName === 'BR') { currentPText += "\n"; }
+                });
+                textToCopy += currentPText.trim() + "\n";
+            });
+            copyToClipboard(textToCopy.trim(), '表示テキスト');
+        });
+        copyCleanTextButton.addEventListener('click', () => {
+             let textToCopy = "";
+             outputArea.querySelectorAll('p[data-paragraph-id]').forEach(pElem => {
+                if (pElem.querySelector('br') && pElem.textContent.trim() === '') { textToCopy += "\n"; return; }
+                if (pElem.textContent.trim() === 'ここに結果が表示されます...') return;
+                textToCopy += getCleanTextForSpeech(pElem) + "\n";
+             });
+             copyToClipboard(textToCopy.trim(), 'ルビなし元テキスト');
+        });
+
+        resetSettingsButton.addEventListener('click', () => {
+            if (confirm("すべての設定（テーマ、フォントサイズ、音声設定、ルビ表示、入力履歴）を初期状態に戻しますか？")) {
+                localStorage.removeItem('theme');
+                localStorage.removeItem('fontSize');
+                localStorage.removeItem('rubyVisible');
+                localStorage.removeItem('ttsRate');
+                localStorage.removeItem('ttsPitch');
+                localStorage.removeItem('preferredVoice');
+                localStorage.removeItem('inputText'); 
+                
+                currentFontSize = DEFAULT_FONT_SIZE;
+                isRubyVisible = DEFAULT_RUBY_VISIBLE;
+                
+                applyTheme(false); 
+                document.querySelectorAll('.ruby-text p').forEach(el => el.style.fontSize = `${currentFontSize}em`);
+                outputArea.classList.toggle('hide-ruby-rt', !isRubyVisible);
+                toggleRubyButton.textContent = isRubyVisible ? "ルビ OFF" : "ルビ ON";
+                rateSlider.value = 1; rateValue.textContent = "1.0";
+                pitchSlider.value = 1; pitchValue.textContent = "1.0";
+                
+                populateVoiceList(); 
+                inputText.value = sampleTexts[0] ? sampleTexts[0].text : ''; 
+                renderText(inputText.value);
+                alert("設定がリセットされました。");
+            }
+        });
+
+        printOutputButton.addEventListener('click', () => {
+            window.print();
+        });
+
+        function initialize() {
+            const preferredTheme = localStorage.getItem('theme');
+            applyTheme(preferredTheme === 'dark');
+
+            const savedFontSize = localStorage.getItem('fontSize');
+            currentFontSize = savedFontSize ? parseFloat(savedFontSize) : DEFAULT_FONT_SIZE;
+            
+            const savedRubyVisible = localStorage.getItem('rubyVisible');
+            isRubyVisible = (savedRubyVisible !== null) ? (savedRubyVisible === 'true') : DEFAULT_RUBY_VISIBLE;
+            
+            outputArea.classList.toggle('hide-ruby-rt', !isRubyVisible);
+            toggleRubyButton.textContent = isRubyVisible ? "ルビ OFF" : "ルビ ON";
+            toggleRubyButton.title = isRubyVisible ? "ルビを非表示にする" : "ルビを表示する";
+            
+            const savedRate = localStorage.getItem('ttsRate');
+            if (savedRate) { rateSlider.value = savedRate; rateValue.textContent = parseFloat(savedRate).toFixed(1); }
+            const savedPitch = localStorage.getItem('ttsPitch');
+            if (savedPitch) { pitchSlider.value = savedPitch; pitchValue.textContent = parseFloat(savedPitch).toFixed(1); }
+            
+            sampleTexts.forEach(sample => {
+                const option = document.createElement('option');
+                option.value = sample.name; option.textContent = sample.name;
+                sampleTextSelector.appendChild(option);
+            });
+            if (sampleTexts.length > 0) sampleTextSelector.value = sampleTexts[0].name;
+
+            const savedInput = localStorage.getItem('inputText');
+            if (savedInput) inputText.value = savedInput;
+            else if (sampleTexts.length > 0) {
+                inputText.value = sampleTexts[0].text;
+                sampleTextSelector.value = sampleTexts[0].name;
+            }
+            
+            populateVoiceList(); 
+            renderText(inputText.value || ''); 
+            updateTTSButtons(false, false); 
+
+            window.addEventListener('beforeunload', () => {
+                if (synthesis && (synthesis.speaking || synthesis.paused)) synthesis.cancel();
+            });
+        }
+        
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = ".hide-ruby-rt rt { display: none !important; }";
+        document.head.appendChild(styleSheet);
+
+        initialize();
+    </script>
+</body>
+</html>
